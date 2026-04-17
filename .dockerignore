@@ -1,0 +1,21 @@
+.env
+.env.*
+!.env.example
+
+.git
+.gitignore
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+.venv/
+venv/
+.python-version
+
+*.log
+
+# Cursor/IDE artifacts
+.cursor/
+

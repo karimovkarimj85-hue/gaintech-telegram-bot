@@ -1,0 +1,6 @@
+app = "gaintech-bot"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
