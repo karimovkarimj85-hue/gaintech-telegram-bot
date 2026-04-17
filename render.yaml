@@ -1,0 +1,26 @@
+---
+services:
+  - type: worker
+    name: gaintech-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: LLM_PROVIDER
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        sync: false
+      - key: NOTIFY_CHANNEL_ID
+        sync: false
+      - key: ADMIN_IDS
+        sync: false
+      - key: MAX_HISTORY
+        value: "10"
+      - key: MAX_TOKENS
+        value: "1000"
+      - key: TEMPERATURE
+        value: "0.7"

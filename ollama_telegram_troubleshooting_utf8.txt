@@ -1,0 +1,174 @@
+Интеграция Ollama с Telegram‑ботом: типовые проблемы и быстрый троблшутинг
+Executive summary
+При связке локального Ollama[1] (например, llama3.2:3b) + Telegram‑бота чаще всего «ломается» не сама модель, а (а) сетевое/HTTP‑взаимодействие (timeout, streaming, прокси), (б) формат сообщений и роль system, (в) ресурсы ПК (RAM/CPU), (г) логика бота (двойные хендлеры, отсутствует state machine). Ниже — короткая, практичная карта ошибок + чек‑лист отладки + патчи, которые дают максимальный эффект за 30–60 минут.
+Типовые runtime‑ошибки и как чинить быстро
+Ниже — самые частые ошибки «в рантайме» и что делать.
+Ключевой принцип: при любых «странных» JSON‑ошибках сначала исключай streaming: /api/chat по умолчанию стримит ответ, а многие клиенты/обвязки парсят это неверно, если забыть "stream": false. [6]
+Промпт‑ошибки: почему модель «игнорит system», уезжает в английский и ломает стиль
+Система “не слушается” или слушается со второй реплики
+1) Слишком длинный system prompt иногда действительно приводит к тому, что system не срабатывает на первом ходе — это отмечали в баг‑репорте Ollama. [9]
+2) Порядок ролей: system должен быть первым в messages. API Ollama ожидает массив messages с role/content. [10]
+3) Неправильный endpoint: если вы используете /api/generate, там system кладётся отдельным полем system, а не через messages. При смешивании подходов system может «пропасть». [11]
+Практика: для маленьких моделей (3B) лучше держать system короче (10–25 строк), без длинных списков и “юридических” полотен. Длинный промпт увеличивает шансы, что модель «разъедется» по языку и стилю.
+Длинные подсказки обрезаются (truncation) → странные ответы
+Если вы задаёте большие инструкции + длинную историю диалога, сервер/клиент начинает резать контекст. Эффект: модель «теряет» правила, начинает мешать языки и отвечать “с ошибками/смешанно”. У вас это уже видно в логах как смешанный русский/английский и «плавающий» тон. fileciteturn0file0
+Решение:
+- ограничить окно истории (например, последние 8–12 сообщений);
+- делать “сводку” диалога и хранить её отдельно;
+- лимитировать max_tokens ответа (в Ollama это num_predict у некоторых клиентов; в raw API — контролируйте длину ответа через инструкцию и лимитирование на стороне клиента).
+Роль/формат mismatch
+Ollama ожидает структуру {"messages":[{"role":"user","content":"..."}]}. [10]
+Типовая ошибка: передать text вместо content, или system как обычный user, или перепутать /api/generate и /api/chat.
+Код‑ошибка, похожая на “промпт игнорится”: двойной ответ
+В вашем логе бот в одном и том же моменте сказал и “осталось 2 ответа”, и “нет, лимита нет” — это почти всегда два разных хендлера/ветки кода отправили два сообщения на одно событие. fileciteturn0file0
+Решение: после отправки сообщения обязательно return, либо используйте state machine и строгие фильтры хендлеров.
+Производительность и ресурсы: OOM, медленно на CPU, лимиты контекста
+OOM / Out of memory
+Даже 3B модель может упасть по памяти на ноутбуке, особенно при большом контексте. В issue по Llama 3.2 3B обсуждали OOM на ~13 GB RAM, и что помогает уменьшение offload/слоёв и внимательность к настройкам. [12]
+Что делать:
+- закрыть тяжёлые приложения;
+- снизить “аппетит” контекста (меньше истории, меньше RAG‑чанков);
+- если используете прокси/внешний UI — отключить streaming buffering и увеличить таймауты (иначе вы увидите 502/504). [13]
+Очень медленно (CPU inference)
+Это нормально на слабом CPU: 3B может отвечать приемлемо, но при длинных промптах скорость падает кратно. Сообщество отмечает, что “3B должна летать”, и если не летает — часто модель работает на CPU, а не на GPU. [14]
+Бизнес‑фикс: для бота важнее стабильное SLA. Поэтому делайте “quick replies” (шаблоны/FAQ) и используйте LLM только для сложных вопросов — это снижает нагрузку и улучшает UX.
+Контекст‑лимиты
+Логи модели могут показывать, что у неё большой context_length (например 131072), но это не означает, что ваш ноутбук реально потянет такой контекст без тормозов/падений. [12]
+На практике для студенческого ноутбука держите контекст маленьким: 2–6k токенов эквивалента (короткая история + 2–4 чанка RAG).
+Интеграционные баги: endpoint, тело запроса, sync/async
+Самое частое: - неправильно: http://localhost:11434/chat вместо /api/chat; правильно — /api/chat [2]
+- забыли "stream": false → JSONL ломает парсер/клиента [6]
+- sync‑запросы в async‑боте (aiogram) блокируют event loop → бот “зависает”; используйте httpx.AsyncClient или asyncio.to_thread.
+- не логируете status_code и text ответа → “JSON ошибка” маскирует 502/504.
+“Комьюнити‑баги” и короткие выводы
+System prompt не работает при большой длине (Ollama issue). Вывод: сокращайте system, особенно на маленьких моделях. [9]
+JSON parse / unexpected end часто связан со streaming и прокси/туннелями (Continue issue + обсуждения). Вывод: отключайте streaming и проверяйте прокси. [15]
+502 Bad Gateway встречается при неправильном доступе к endpoint или прокси. [16]
+504 Timeout у клиентов — лечится увеличением timeout. [5]
+Port bind на Windows: системная проблема с портом/правами. [3]
+Пошаговый чек‑лист дебага
+1) Проверить Ollama HTTP напрямую (без бота) — запрос из доков /api/chat. [2]
+2) Проверить, что используется нужный endpoint (/api/chat) и что "stream": false. [17]
+3) Логировать в боте: URL, статус‑код, latency, первые 200 символов ответа при ошибке (если не JSON).
+4) Если 502/504: исключить reverse proxy/туннель, тестировать localhost напрямую. [18]
+5) Если “system игнорится”: укоротить system в 3 раза и повторить; проверить, что system — первое сообщение; убедиться, что не смешан /api/generate и /api/chat. [19]
+6) Если бот отвечает дважды: проверить, что после await message.answer() есть return и что фильтры хендлеров не пересекаются. (Ваша история показывает типичный симптом.) fileciteturn0file0
+Быстрые патчи: ретраи, таймауты, кэш и graceful degradation
+Ниже — компактный пример для aiogram/httpx: отключение streaming, таймаут, 2 ретрая, fallback на cached FAQ.
+import time, hashlib
+import httpx
+from aiogram import Router, F
+from aiogram.types import Message
+
+router = Router()
+
+OLLAMA_URL = "http://localhost:11434/api/chat"
+MODEL = "llama3.2:3b"
+SYSTEM = "Короткий system prompt (10–25 строк)..."
+
+FAQ_CACHE = {}  # замените на Redis/SQLite
+FAQ_TTL = 3600
+
+def cache_get(key):
+    v = FAQ_CACHE.get(key)
+    if not v: return None
+    if v["exp"] < time.time(): 
+        FAQ_CACHE.pop(key, None)
+        return None
+    return v["val"]
+
+def cache_set(key, val, ttl=FAQ_TTL):
+    FAQ_CACHE[key] = {"val": val, "exp": time.time() + ttl}
+
+async def call_ollama(messages, timeout_s=90):
+    payload = {"model": MODEL, "messages": messages, "stream": False}
+    last_err = None
+    for attempt in range(3):
+        try:
+            async with httpx.AsyncClient(timeout=timeout_s) as client:
+                r = await client.post(OLLAMA_URL, json=payload)
+            if r.status_code >= 500:
+                last_err = f"server {r.status_code}: {r.text[:200]}"
+                await asyncio.sleep(0.8 * (attempt + 1))
+                continue
+            r.raise_for_status()
+            data = r.json()
+            return data["message"]["content"]
+        except Exception as e:
+            last_err = str(e)
+            await asyncio.sleep(0.8 * (attempt + 1))
+    return None  # graceful fallback
+
+@router.message(F.text)
+async def handler(m: Message):
+    user_q = (m.text or "").strip()
+    key = hashlib.sha256(user_q.lower().encode("utf-8")).hexdigest()
+    cached = cache_get(key)
+    if cached:
+        await m.answer(cached)
+        return
+
+    messages = [{"role":"system","content":SYSTEM},
+                {"role":"user","content":user_q}]
+    ans = await call_ollama(messages)
+    if not ans:
+        await m.answer("AI сейчас перегружен/недоступен. Напишите «Хочу консультацию» — передам менеджеру.")
+        return
+    cache_set(key, ans)
+    await m.answer(ans)
+Почему это работает: - снимает главный источник JSON‑ошибок (streaming) [17]
+- уменьшает “падение UX” при 502/504 (ретраи + fallback) [18]
+Как валидировать, что system prompt реально влияет
+Минимальный воспроизводимый тест (в консоли / curl): - system: “Отвечай только по-русски, в 1–2 предложениях, всегда завершай вопросом.” - user: “Hello, how are you?” Если модель всё равно уходит в английский — значит: - system слишком длинный/шумный (сократить) [9]
+- или system не попадает в /api/chat messages (проверить тело запроса) [10]
+Мониторинг и логирование (минимум для стабильного MVP)
+Логируйте на каждый LLM‑вызов: - latency_ms, status_code, error_type, retries - длину user текста и длину ответа (символы) - текущий stage (q1/q2/q3/await_contact и т.д.) - cache hit rate (сколько ответов выдали без Ollama)
+Метрики, которые сразу покажут деградацию: - p95 latency (если растёт — модель/CPU перегружены) - error rate 5xx/timeout - доля fallback на “человека” (handoff)
+Финальный чек‑лист “сделай сейчас”
+[ ] Убедись, что бот зовёт /api/chat и ставит "stream": false. [17]
+[ ] Увеличь timeout на запрос (60–180s), добавь 2 ретрая. [5]
+[ ] Укороти system prompt (особенно для 3B) и помести system первым сообщением. [20]
+[ ] Лимитируй историю: последние 8–12 сообщений; остальное — в summary.
+[ ] Проверь, что у тебя нет “двойного ответа” из двух хендлеров (симптом у тебя в логах). fileciteturn0file0
+[ ] Добавь кэш на FAQ и “graceful degradation”.
+[ ] Если используешь прокси/туннель — на время отключи, проверь localhost; 502/JSON‑ошибки часто из‑за proxy/streaming. [21]
+Официальные ссылки
+Ollama /api/chat: https://docs.ollama.com/api/chat
+Ollama API (GitHub): https://github.com/ollama/ollama/blob/main/docs/api.md
+Ollama /api/generate (system field): https://docs.ollama.com/api/generate
+Ollama issue: System prompts not work (long prompt): https://github.com/ollama/ollama/issues/6176
+Ollama issue: 502 Bad Gateway: https://github.com/ollama/ollama/issues/5437
+Ollama issue: Windows bind 11434: https://github.com/ollama/ollama/issues/9444
+Ollama issue: OOM llama 3.2 3B: https://github.com/ollama/ollama/issues/7673
+Continue issue (JSON parse + streaming): https://github.com/continuedev/continue/issues/751
+Telegram Bot API: https://core.telegram.org/bots/api
+aiogram KeyboardButton request_contact: https://docs.aiogram.dev/en/v3.19.0/api/types/keyboard_button.html
+StackOverflow (Ollama chat stuck): https://stackoverflow.com/questions/79149108/ollama-with-python-chat-is-stuck-on-the-first-prompt
+StackOverflow (JSON extra data): https://stackoverflow.com/questions/79863122/json-loads-fails-with-jsondecodeerror-extra-data-when-parsing-llm-output-oll
+
+[1] [2] [10] Generate a chat message
+https://docs.ollama.com/api/chat?utm_source=chatgpt.com
+[3] listen tcp 127.0.0.1:11434: bind: An attempt was made to ...
+https://github.com/ollama/ollama/issues/9444?utm_source=chatgpt.com
+[4] [16] [18] [21] 502 Bad Gateway · Issue #5437 · ollama ...
+https://github.com/ollama/ollama/issues/5437?utm_source=chatgpt.com
+[5] 504 Gateway Timeout - The server didn't respond in time
+https://github.com/ollama/ollama-python/issues/314?utm_source=chatgpt.com
+[6] [17] ollama/docs/api.md at main
+https://github.com/ollama/ollama/blob/main/docs/api.md?utm_source=chatgpt.com
+[7] `SyntaxError: JSON.parse: unexpected character at line 1 ...
+https://github.com/open-webui/open-webui/discussions/11673?utm_source=chatgpt.com
+[8] Connection Errors
+https://docs.openwebui.com/troubleshooting/connection-error/?utm_source=chatgpt.com
+[9] [20] System Prompts can not work on the first round. · Issue #6176
+https://github.com/ollama/ollama/issues/6176?utm_source=chatgpt.com
+[11] [19] Generate a response
+https://docs.ollama.com/api/generate?utm_source=chatgpt.com
+[12] out of memory - Llama 3.2 3B on laptop with 13 GB RAM ...
+https://github.com/ollama/ollama/issues/7673?utm_source=chatgpt.com
+[13] NGINX Reverse Proxy Ollama: Host Your Own Free LLM
+https://www.getpagespeed.com/server-setup/nginx-reverse-proxy-ollama-vllm?utm_source=chatgpt.com
+[14] Ollama (llama3.2:3b) runs extremely slow on my MBP ...
+https://www.reddit.com/r/LocalLLaMA/comments/1hkxm3t/ollama_llama323b_runs_extremely_slow_on_my_mbp/?utm_source=chatgpt.com
+[15] Ollama Unexpected end of JSON input · Issue #751
+https://github.com/continuedev/continue/issues/751?utm_source=chatgpt.com
