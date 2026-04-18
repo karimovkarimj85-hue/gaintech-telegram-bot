@@ -1,27 +1,31 @@
-﻿# Mini App (портфолио)
+﻿# Gain Tech — мини-приложение (Vite + React)
 
-Статика для Telegram Web App. В том же репозитории, что и бот.
-
-## Приватный репозиторий и бесплатный GitHub
-
-На **Free** плане **GitHub Pages для приватных репозиториев недоступен** (в Settings → Pages будет предложение сделать репозиторий публичным или апгрейд).
-
-**Варианты:**
-
-1. **Сделать репозиторий публичным** — `Settings → General → Danger Zone → Change repository visibility → Public`. После этого включите Pages как в README ниже. Код бота и портфолио — это нормальная практика для портфолио; секреты (токены) не храните в репо, только в Railway / Secrets.
-2. **Оставить репо приватным** — выложить только папку `gaintech-portfolio/` на **Cloudflare Pages**, **Netlify** или **Vercel** (бесплатные тарифы, приватный GitHub подключается). Тогда в переменной `PORTFOLIO_WEBAPP_URL` укажите выданный URL (например `https://gaintech-portfolio.pages.dev/...`).
-
----
-
-## GitHub Pages (если репозиторий публичный)
-
-1. Откройте репозиторий **gaintech-telegram-bot** на GitHub.
-2. **Settings → Pages**
-3. В блоке **Build and deployment** выберите **Source: GitHub Actions** (не «Deploy from a branch», если раньше не работало).
-4. Сделайте push в `main` или запустите workflow **Deploy portfolio to GitHub Pages** вручную (**Actions → … → Run workflow**).
-
-После успешного деплоя мини-приложение:
+Статика собирается в `dist/`. URL после деплоя:
 
 `https://karimovkarimj85-hue.github.io/gaintech-telegram-bot/index.html`
 
-Переменная окружения бота `PORTFOLIO_WEBAPP_URL` должна совпадать с этим URL (уже задана по умолчанию в `config.py`).
+## Локально
+
+```bash
+cd gaintech-portfolio
+npm install
+npm run dev
+```
+
+## Сборка
+
+```bash
+npm run build
+```
+
+## Превью проектов
+
+Файлы в `public/preview-gaintech.svg` и `preview-barber.svg` — заглушки. Можно заменить на свои **PNG/WebP** с теми же именами (или поправить пути в `src/projects.js`).
+
+## GitHub Actions
+
+Репозиторий **public**, **Settings → Pages → Source: GitHub Actions**. Workflow собирает проект и публикует `dist/`.
+
+## Профиль в мини-приложении
+
+Имя и телефон сохраняются в `localStorage` (ключ `gaintech_miniapp_profile_v1`), чтобы не вводить их при каждой заявке. Кнопка «Забыть сохранённые контакты» очищает данные.

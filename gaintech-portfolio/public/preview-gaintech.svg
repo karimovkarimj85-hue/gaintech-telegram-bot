@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#080808"/>
+  <text x="400" y="260" fill="#ffffff" font-family="system-ui,sans-serif" font-size="72" font-weight="800" text-anchor="middle">GAIN</text>
+  <text x="520" y="310" fill="#888888" font-family="system-ui,sans-serif" font-size="28" font-weight="600" text-anchor="middle">TECH</text>
+  <text x="400" y="380" fill="#aaaaaa" font-family="system-ui,sans-serif" font-size="22" text-anchor="middle">'AUTOMATE GROWTH'</text>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#080808"/>
+  <circle cx="400" cy="220" r="90" fill="none" stroke="#ffffff" stroke-width="3"/>
+  <path d="M340 200 L460 200 M400 140 L400 300" stroke="#ffffff" stroke-width="2" fill="none"/>
+  <text x="400" y="380" fill="#ffffff" font-family="Georgia,serif" font-size="36" font-style="italic" text-anchor="middle">Dilshod's</text>
+  <text x="520" y="420" fill="#666666" font-family="system-ui,sans-serif" font-size="14" text-anchor="middle">GAIN TECH</text>
+</svg>
