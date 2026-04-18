@@ -1,4 +1,20 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+
+/** На ПК (широкий экран) — одна длинная страница; в мини-приложении узкий экран — как раньше, две «вкладки». */
+function useDesktopMerge() {
+  const query = '(min-width: 1024px)';
+  const [matches, setMatches] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(query).matches : false,
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const onChange = () => setMatches(mql.matches);
+    mql.addEventListener('change', onChange);
+    setMatches(mql.matches);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+  return matches;
+}
 import Waves from './components/Waves';
 import TextType from './components/TextType';
 import MagicBento from './components/MagicBento';
@@ -57,6 +73,7 @@ function sendTelegramData(payload) {
 }
 
 export default function App() {
+  const desktopMerged = useDesktopMerge();
   const [page, setPage] = useState('about');
   const [orderOpen, setOrderOpen] = useState(false);
   const [consultOpen, setConsultOpen] = useState(false);
@@ -100,6 +117,26 @@ export default function App() {
       setFPhone(p.phone || '');
     }
   }, [orderOpen, consultOpen]);
+
+  const scrollToSection = useCallback((id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  /** На широком экране подсветка дока по прокрутке (одна страница). */
+  useEffect(() => {
+    if (!desktopMerged) return;
+    const worksEl = document.getElementById('section-works');
+    if (!worksEl) return;
+    const onScroll = () => {
+      const top = worksEl.getBoundingClientRect().top;
+      const threshold = window.innerHeight * 0.38;
+      const next = top <= threshold ? 'projects' : 'about';
+      setPage((prev) => (prev === next ? prev : next));
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [desktopMerged]);
 
   function openOrder() {
     setErr('');
@@ -180,20 +217,32 @@ export default function App() {
     setConsultOpen(false);
   }
 
+  const goAbout = () => {
+    setPage('about');
+    if (desktopMerged) scrollToSection('section-about');
+  };
+  const goWorks = () => {
+    setPage('projects');
+    if (desktopMerged) scrollToSection('section-works');
+  };
+
   const dockItems = [
     {
       icon: <IconInfo />,
       label: 'О нас',
       className: page === 'about' ? 'dock-item--active' : '',
-      onClick: () => setPage('about'),
+      onClick: goAbout,
     },
     {
       icon: <IconGrid />,
       label: 'Работы',
       className: page === 'projects' ? 'dock-item--active' : '',
-      onClick: () => setPage('projects'),
+      onClick: goWorks,
     },
   ];
+
+  const hideAboutMobile = !desktopMerged && page !== 'about';
+  const hideProjectsMobile = !desktopMerged && page !== 'projects';
 
   return (
     <div className="app">
@@ -203,9 +252,11 @@ export default function App() {
         </div>
       )}
 
-      <div className="app__main">
-        {page === 'about' && (
-          <div className="about-page">
+      <div className={`app__main${desktopMerged ? ' app__main--desktop-merge' : ''}`}>
+        <div
+          id="section-about"
+          className={`about-page${hideAboutMobile ? ' app-section--hide-mobile' : ''}`}
+        >
             <header className="header header--about about-page__intro">
               <div className="brand">Gain Tech</div>
               <TextType
@@ -277,11 +328,12 @@ export default function App() {
                 </div>
               </aside>
             </div>
-          </div>
-        )}
+        </div>
 
-        {page === 'projects' && (
-          <div className="projects-page">
+        <div
+          id="section-works"
+          className={`projects-page${hideProjectsMobile ? ' app-section--hide-mobile' : ''}`}
+        >
             <header className="header header--projects">
               <div className="brand">Gain Tech</div>
               <div className="header-title header-title--sm">
@@ -365,13 +417,12 @@ export default function App() {
               )}
             </div>
 
-            <div className="cta-row cta-row--tight">
-              <button type="button" className="cta-btn secondary" onClick={() => setPage('about')}>
+            <div className={`cta-row cta-row--tight${desktopMerged ? ' cta-row--desktop-merge-hide' : ''}`}>
+              <button type="button" className="cta-btn secondary" onClick={goAbout}>
                 ← О компании
               </button>
             </div>
-          </div>
-        )}
+        </div>
       </div>
 
       <Dock items={dockItems} panelHeight={56} baseItemSize={46} magnification={58} distance={180} />

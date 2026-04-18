@@ -26,6 +26,27 @@
   z-index: 1;
 }
 
+/* Мобильный / мини-апп: показываем только выбранную «вкладку» */
+.app-section--hide-mobile {
+  display: none;
+}
+
+/* ПК: одна страница — якоря для дока */
+#section-about,
+#section-works {
+  scroll-margin-top: 12px;
+}
+
+.app__main--desktop-merge #section-works {
+  margin-top: 12px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.cta-row--desktop-merge-hide {
+  display: none;
+}
+
 .header {
   padding: 40px 20px 20px;
   position: relative;
