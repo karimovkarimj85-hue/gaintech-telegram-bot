@@ -20,7 +20,7 @@ npm run build
 
 ## Превью карточек
 
-В `public/` лежат реальные файлы: `preview-gaintech.jpg`, `preview-barber.png` (при отсутствии — fallback SVG). См. `public/PREVIEW-IMAGES.txt`.
+В `public/` лежат превью: `photo-aurora.jpg`, `photo-barber.png` (при ошибке загрузки — SVG из `preview-*.svg`). См. `public/PREVIEW-IMAGES.txt`.
 
 По умолчанию открывается **«О нас»**; вкладка **«Работы»** — кейсы с фильтрами и тем же фоном LineWaves.
 

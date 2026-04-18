@@ -22,7 +22,7 @@ export const PROJECTS = [
     tech: ['aiogram 3', 'Python', 'OpenRouter'],
     year: '2025',
     url: 'https://t.me/gaintech_bot',
-    preview: publicAsset('/preview-gaintech.jpg'),
+    preview: publicAsset('/photo-aurora.jpg'),
     previewFallback: publicAsset('/preview-gaintech.svg'),
   },
   {
@@ -34,7 +34,7 @@ export const PROJECTS = [
     tech: ['aiogram', 'Python'],
     year: '2025',
     url: 'https://t.me/dishod_barber_bot',
-    preview: publicAsset('/preview-barber.png'),
+    preview: publicAsset('/photo-barber.png'),
     previewFallback: publicAsset('/preview-barber.svg'),
   },
 ];
