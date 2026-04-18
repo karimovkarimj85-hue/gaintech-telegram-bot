@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import LineWaves from './components/LineWaves';
 import MagicBento from './components/MagicBento';
 import ReflectiveCard from './components/ReflectiveCard';
@@ -6,6 +6,23 @@ import Dock from './components/Dock';
 import { PROJECTS, BENTO_ITEMS, typeLabel } from './projects';
 import { loadProfile, saveProfile, clearProfile } from './profileStorage';
 import './App.css';
+
+/** Тот же фон LineWaves, что на «О нас» */
+const LINE_WAVES_PROPS = {
+  speed: 0.28,
+  innerLineCount: 28,
+  outerLineCount: 32,
+  warpIntensity: 1,
+  rotation: -45,
+  edgeFadeWidth: 0,
+  colorCycleSpeed: 0.9,
+  brightness: 0.22,
+  color1: '#ffffff',
+  color2: '#e0e7ff',
+  color3: '#a78bfa',
+  enableMouseInteraction: true,
+  mouseInfluence: 1.8,
+};
 
 function IconGrid() {
   return (
@@ -53,6 +70,20 @@ export default function App() {
   const [fBudget, setFBudget] = useState('');
   const [fQuestion, setFQuestion] = useState('');
   const [err, setErr] = useState('');
+  const [projectFilter, setProjectFilter] = useState('all');
+
+  const filteredProjects = useMemo(() => {
+    if (projectFilter === 'all') return PROJECTS;
+    return PROJECTS.filter((p) => p.type === projectFilter);
+  }, [projectFilter]);
+
+  const projectCounts = useMemo(() => {
+    const all = PROJECTS.length;
+    const site = PROJECTS.filter((p) => p.type === 'site').length;
+    const bot = PROJECTS.filter((p) => p.type === 'bot').length;
+    const other = PROJECTS.filter((p) => p.type === 'other').length;
+    return { all, site, bot, other };
+  }, []);
 
   useEffect(() => {
     if (window.Telegram?.WebApp) {
@@ -167,23 +198,9 @@ export default function App() {
 
   return (
     <div className="app">
-      {page === 'about' && (
+      {(page === 'about' || page === 'projects') && (
         <div className="app__waves app__waves--about" aria-hidden>
-          <LineWaves
-            speed={0.28}
-            innerLineCount={28}
-            outerLineCount={32}
-            warpIntensity={1}
-            rotation={-45}
-            edgeFadeWidth={0}
-            colorCycleSpeed={0.9}
-            brightness={0.22}
-            color1="#ffffff"
-            color2="#e0e7ff"
-            color3="#a78bfa"
-            enableMouseInteraction
-            mouseInfluence={1.8}
-          />
+          <LineWaves {...LINE_WAVES_PROPS} />
         </div>
       )}
 
@@ -253,15 +270,55 @@ export default function App() {
               <div className="header-title header-title--sm">
                 Кейсы
                 <br />
-                <span>в Telegram</span>
+                <span>и проекты</span>
               </div>
-              <p className="header-sub">Два живых бота — новые работы добавим сюда по мере запуска.</p>
+              <p className="header-sub">Боты, сайты, CRM и AI — сюда будем добавлять новые работы по мере запуска.</p>
             </header>
 
-            <div className="projects-hint">Превью: положите свои PNG в репозиторий (см. public/PREVIEW-IMAGES.txt)</div>
+            <div className="filters-wrap">
+              <div className="filters">
+                {[
+                  ['all', 'Все'],
+                  ['bot', 'Боты'],
+                  ['site', 'Сайты'],
+                  ['other', 'Другое'],
+                ].map(([k, label]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    className={`filter-btn ${projectFilter === k ? 'active' : ''}`}
+                    onClick={() => setProjectFilter(k)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="stats">
+              <div className="stat">
+                <div className="stat-num">{projectCounts.all}</div>
+                <div className="stat-label">Всего</div>
+              </div>
+              <div className="stat">
+                <div className="stat-num">{projectCounts.bot}</div>
+                <div className="stat-label">Боты</div>
+              </div>
+              <div className="stat">
+                <div className="stat-num">{projectCounts.site}</div>
+                <div className="stat-label">Сайты</div>
+              </div>
+              <div className="stat">
+                <div className="stat-num">{projectCounts.other}</div>
+                <div className="stat-label">AI</div>
+              </div>
+            </div>
 
             <div className="grid">
-              {PROJECTS.map((item, index) => (
+              {filteredProjects.length === 0 ? (
+                <div className="grid-empty">В этой категории пока пусто — загляните в «Все» или позже.</div>
+              ) : (
+                filteredProjects.map((item, index) => (
                 <article key={item.id} className={'card' + (item.featured ? ' featured' : '')} style={{ animationDelay: `${index * 40}ms` }}>
                   <div className="card-preview">
                     <PreviewImg src={item.preview} fallback={item.previewFallback} />
@@ -282,12 +339,13 @@ export default function App() {
                     </div>
                     {item.url && item.url !== '#' ? (
                       <a className="card-link" href={item.url} target="_blank" rel="noreferrer">
-                        Открыть бота
+                        {item.type === 'bot' ? 'Открыть бота' : 'Открыть'}
                       </a>
                     ) : null}
                   </div>
                 </article>
-              ))}
+                ))
+              )}
             </div>
 
             <div className="cta-row cta-row--tight">

@@ -1,10 +1,6 @@
-Превью карточек (как в Telegram):
+Превью в репозитории (папка public/):
 
-1. Сохраните вашу картинку Gain Tech как:
-   gaintech-portfolio/public/preview-gaintech.png
+- preview-gaintech.jpg — Aurora / Gain Tech
+- preview-barber.png — Dilshod's Barber
 
-2. Картинку Dilshod's Barber как:
-   gaintech-portfolio/public/preview-barber.png
-
-Формат: PNG или JPG (переименуйте в .png) — ~1200×900 или похожее соотношение.
-Если файлов нет, подставятся SVG-заглушки.
+При сборке они копируются в сайт как есть. SVG preview-gaintech.svg / preview-barber.svg — запасной вариант, если картинка не загрузилась.

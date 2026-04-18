@@ -18,16 +18,11 @@ npm run dev
 npm run build
 ```
 
-## Превью карточек (ваши фото)
+## Превью карточек
 
-Ожидаемые файлы (положите в `public/`):
+В `public/` лежат реальные файлы: `preview-gaintech.jpg`, `preview-barber.png` (при отсутствии — fallback SVG). См. `public/PREVIEW-IMAGES.txt`.
 
-- `preview-gaintech.png` — обложка Aurora / Gain Tech  
-- `preview-barber.png` — обложка Dilshod's Barber  
-
-Пока PNG нет в репозитории, показываются SVG из `public/preview-*.svg`. Подробности: `public/PREVIEW-IMAGES.txt`.
-
-По умолчанию открывается вкладка **«О нас»**; **«Работы»** — два реальных бота, без плейсхолдеров «скоро».
+По умолчанию открывается **«О нас»**; вкладка **«Работы»** — кейсы с фильтрами и тем же фоном LineWaves.
 
 ## GitHub Actions
 

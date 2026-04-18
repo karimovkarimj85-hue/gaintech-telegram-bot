@@ -12,8 +12,7 @@ export const PROJECTS = [
     tech: ['aiogram 3', 'Python', 'OpenRouter'],
     year: '2025',
     url: 'https://t.me/gaintech_bot',
-    /** Положите в `public/preview-gaintech.png` (ваша обложка). Если файла нет — покажется SVG. */
-    preview: '/preview-gaintech.png',
+    preview: '/preview-gaintech.jpg',
     previewFallback: '/preview-gaintech.svg',
   },
   {
