@@ -149,16 +149,18 @@ export default function LineWaves({
 
   useEffect(() => {
     if (!containerRef.current) return;
-    const container = containerRef.current;
-    const renderer = new Renderer({ alpha: true, premultipliedAlpha: false });
-    const gl = renderer.gl;
-    gl.clearColor(0, 0, 0, 0);
 
+    const container = containerRef.current;
+    let renderer;
+    let gl;
     let program;
+    let mesh;
+    let animationFrameId;
     const currentMouse = [0.5, 0.5];
     let targetMouse = [0.5, 0.5];
 
     function handleMouseMove(e) {
+      if (!gl?.canvas) return;
       const rect = gl.canvas.getBoundingClientRect();
       targetMouse = [(e.clientX - rect.left) / rect.width, 1.0 - (e.clientY - rect.top) / rect.height];
     }
@@ -168,6 +170,7 @@ export default function LineWaves({
     }
 
     function resize() {
+      if (!renderer) return;
       renderer.setSize(container.offsetWidth, container.offsetHeight);
       if (program) {
         program.uniforms.uResolution.value = [
@@ -177,71 +180,88 @@ export default function LineWaves({
         ];
       }
     }
-    window.addEventListener('resize', resize);
-    resize();
 
-    const geometry = new Triangle(gl);
-    const rotationRad = (rotation * Math.PI) / 180;
-    program = new Program(gl, {
-      vertex: vertexShader,
-      fragment: fragmentShader,
-      uniforms: {
-        uTime: { value: 0 },
-        uResolution: { value: [gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height] },
-        uSpeed: { value: speed },
-        uInnerLines: { value: innerLineCount },
-        uOuterLines: { value: outerLineCount },
-        uWarpIntensity: { value: warpIntensity },
-        uRotation: { value: rotationRad },
-        uEdgeFadeWidth: { value: edgeFadeWidth },
-        uColorCycleSpeed: { value: colorCycleSpeed },
-        uBrightness: { value: brightness },
-        uColor1: { value: hexToVec3(color1) },
-        uColor2: { value: hexToVec3(color2) },
-        uColor3: { value: hexToVec3(color3) },
-        uMouse: { value: new Float32Array([0.5, 0.5]) },
-        uMouseInfluence: { value: mouseInfluence },
-        uEnableMouse: { value: enableMouseInteraction },
-      },
-    });
-
-    const mesh = new Mesh(gl, { geometry, program });
-    container.appendChild(gl.canvas);
-
-    if (enableMouseInteraction) {
-      gl.canvas.addEventListener('mousemove', handleMouseMove);
-      gl.canvas.addEventListener('mouseleave', handleMouseLeave);
+    try {
+      renderer = new Renderer({ alpha: true, premultipliedAlpha: false });
+      gl = renderer.gl;
+      gl.clearColor(0, 0, 0, 0);
+    } catch (e) {
+      console.warn('[LineWaves] WebGL недоступен, фон отключён', e);
+      return;
     }
 
-    let animationFrameId;
+    window.addEventListener('resize', resize);
 
-    function update(time) {
-      animationFrameId = requestAnimationFrame(update);
-      program.uniforms.uTime.value = time * 0.001;
+    try {
+      resize();
+
+      const geometry = new Triangle(gl);
+      const rotationRad = (rotation * Math.PI) / 180;
+      program = new Program(gl, {
+        vertex: vertexShader,
+        fragment: fragmentShader,
+        uniforms: {
+          uTime: { value: 0 },
+          uResolution: { value: [gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height] },
+          uSpeed: { value: speed },
+          uInnerLines: { value: innerLineCount },
+          uOuterLines: { value: outerLineCount },
+          uWarpIntensity: { value: warpIntensity },
+          uRotation: { value: rotationRad },
+          uEdgeFadeWidth: { value: edgeFadeWidth },
+          uColorCycleSpeed: { value: colorCycleSpeed },
+          uBrightness: { value: brightness },
+          uColor1: { value: hexToVec3(color1) },
+          uColor2: { value: hexToVec3(color2) },
+          uColor3: { value: hexToVec3(color3) },
+          uMouse: { value: new Float32Array([0.5, 0.5]) },
+          uMouseInfluence: { value: mouseInfluence },
+          uEnableMouse: { value: enableMouseInteraction },
+        },
+      });
+
+      mesh = new Mesh(gl, { geometry, program });
+      container.appendChild(gl.canvas);
 
       if (enableMouseInteraction) {
-        currentMouse[0] += 0.05 * (targetMouse[0] - currentMouse[0]);
-        currentMouse[1] += 0.05 * (targetMouse[1] - currentMouse[1]);
-        program.uniforms.uMouse.value[0] = currentMouse[0];
-        program.uniforms.uMouse.value[1] = currentMouse[1];
-      } else {
-        program.uniforms.uMouse.value[0] = 0.5;
-        program.uniforms.uMouse.value[1] = 0.5;
+        gl.canvas.addEventListener('mousemove', handleMouseMove);
+        gl.canvas.addEventListener('mouseleave', handleMouseLeave);
       }
 
-      renderer.render({ scene: mesh });
+      function update(time) {
+        animationFrameId = requestAnimationFrame(update);
+        program.uniforms.uTime.value = time * 0.001;
+
+        if (enableMouseInteraction) {
+          currentMouse[0] += 0.05 * (targetMouse[0] - currentMouse[0]);
+          currentMouse[1] += 0.05 * (targetMouse[1] - currentMouse[1]);
+          program.uniforms.uMouse.value[0] = currentMouse[0];
+          program.uniforms.uMouse.value[1] = currentMouse[1];
+        } else {
+          program.uniforms.uMouse.value[0] = 0.5;
+          program.uniforms.uMouse.value[1] = 0.5;
+        }
+
+        renderer.render({ scene: mesh });
+      }
+      animationFrameId = requestAnimationFrame(update);
+    } catch (e) {
+      console.warn('[LineWaves] Ошибка шейдера', e);
+      window.removeEventListener('resize', resize);
+      return;
     }
-    animationFrameId = requestAnimationFrame(update);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', resize);
-      if (enableMouseInteraction) {
+      if (gl?.canvas && enableMouseInteraction) {
         gl.canvas.removeEventListener('mousemove', handleMouseMove);
         gl.canvas.removeEventListener('mouseleave', handleMouseLeave);
       }
-      container.removeChild(gl.canvas);
-      gl.getExtension('WEBGL_lose_context')?.loseContext();
+      if (gl?.canvas?.parentNode === container) {
+        container.removeChild(gl.canvas);
+      }
+      gl?.getExtension('WEBGL_lose_context')?.loseContext();
     };
   }, [
     speed,
