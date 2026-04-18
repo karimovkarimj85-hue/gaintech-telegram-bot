@@ -4,6 +4,11 @@
   position: relative;
 }
 
+/* Обычный сайт в браузере — без нижнего дока */
+.app--public {
+  padding-bottom: 0;
+}
+
 .app__waves {
   position: fixed;
   inset: 0;

@@ -1,4 +1,17 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import Waves from './components/Waves';
+import TextType from './components/TextType';
+import MagicBento from './components/MagicBento';
+import ReflectiveCard from './components/ReflectiveCard';
+import Dock from './components/Dock';
+import PublicNav from './components/PublicNav';
+import PublicFooter from './components/PublicFooter';
+import { PROJECTS, BENTO_ITEMS, typeLabel } from './projects';
+import { loadProfile, saveProfile, clearProfile } from './profileStorage';
+import { useIsTelegramMiniApp } from './useTelegramEnv';
+import './App.css';
+
+const PUBLIC_BOT_URL = 'https://t.me/gaintech_bot';
 
 /** На ПК (широкий экран) — одна длинная страница; в мини-приложении узкий экран — как раньше, две «вкладки». */
 function useDesktopMerge() {
@@ -15,14 +28,6 @@ function useDesktopMerge() {
   }, []);
   return matches;
 }
-import Waves from './components/Waves';
-import TextType from './components/TextType';
-import MagicBento from './components/MagicBento';
-import ReflectiveCard from './components/ReflectiveCard';
-import Dock from './components/Dock';
-import { PROJECTS, BENTO_ITEMS, typeLabel } from './projects';
-import { loadProfile, saveProfile, clearProfile } from './profileStorage';
-import './App.css';
 
 /** 2D-фон (canvas), общий для «О нас» и «Работы» */
 const WAVES_BG_PROPS = {
@@ -73,7 +78,10 @@ function sendTelegramData(payload) {
 }
 
 export default function App() {
+  const isTelegram = useIsTelegramMiniApp();
   const desktopMerged = useDesktopMerge();
+  /** В браузере всегда одна длинная страница; в Telegram — как раньше на узком экране. */
+  const mergedLayout = !isTelegram || desktopMerged;
   const [page, setPage] = useState('about');
   const [orderOpen, setOrderOpen] = useState(false);
   const [consultOpen, setConsultOpen] = useState(false);
@@ -102,13 +110,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
-      window.Telegram.WebApp.setHeaderColor('#080808');
-      window.Telegram.WebApp.setBackgroundColor('#080808');
-    }
-  }, []);
+    if (!isTelegram || !window.Telegram?.WebApp) return;
+    const tw = window.Telegram.WebApp;
+    tw.ready();
+    tw.expand();
+    tw.setHeaderColor('#080808');
+    tw.setBackgroundColor('#080808');
+  }, [isTelegram]);
 
   useEffect(() => {
     const p = loadProfile();
@@ -122,9 +130,9 @@ export default function App() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
-  /** На широком экране подсветка дока по прокрутке (одна страница). */
+  /** Подсветка раздела при прокрутке (док в Telegram или шапка на сайте). */
   useEffect(() => {
-    if (!desktopMerged) return;
+    if (!mergedLayout) return;
     const worksEl = document.getElementById('section-works');
     if (!worksEl) return;
     const onScroll = () => {
@@ -136,9 +144,13 @@ export default function App() {
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);
-  }, [desktopMerged]);
+  }, [mergedLayout]);
 
   function openOrder() {
+    if (!isTelegram) {
+      window.open(PUBLIC_BOT_URL, '_blank', 'noopener,noreferrer');
+      return;
+    }
     setErr('');
     const p = loadProfile();
     setFName(p?.name || '');
@@ -150,6 +162,10 @@ export default function App() {
   }
 
   function openConsult() {
+    if (!isTelegram) {
+      window.open(PUBLIC_BOT_URL, '_blank', 'noopener,noreferrer');
+      return;
+    }
     setErr('');
     const p = loadProfile();
     setFName(p?.name || '');
@@ -219,11 +235,11 @@ export default function App() {
 
   const goAbout = () => {
     setPage('about');
-    if (desktopMerged) scrollToSection('section-about');
+    if (mergedLayout) scrollToSection('section-about');
   };
   const goWorks = () => {
     setPage('projects');
-    if (desktopMerged) scrollToSection('section-works');
+    if (mergedLayout) scrollToSection('section-works');
   };
 
   const dockItems = [
@@ -241,18 +257,20 @@ export default function App() {
     },
   ];
 
-  const hideAboutMobile = !desktopMerged && page !== 'about';
-  const hideProjectsMobile = !desktopMerged && page !== 'projects';
+  const hideAboutMobile = isTelegram && !desktopMerged && page !== 'about';
+  const hideProjectsMobile = isTelegram && !desktopMerged && page !== 'projects';
 
   return (
-    <div className="app">
+    <div className={`app${!isTelegram ? ' app--public' : ''}`}>
       {(page === 'about' || page === 'projects') && (
         <div className="app__waves app__waves--about" aria-hidden>
           <Waves {...WAVES_BG_PROPS} />
         </div>
       )}
 
-      <div className={`app__main${desktopMerged ? ' app__main--desktop-merge' : ''}`}>
+      {!isTelegram && <PublicNav activeSection={page} onAbout={goAbout} onWorks={goWorks} />}
+
+      <div className={`app__main${mergedLayout ? ' app__main--desktop-merge' : ''}`}>
         <div
           id="section-about"
           className={`about-page${hideAboutMobile ? ' app-section--hide-mobile' : ''}`}
@@ -286,9 +304,13 @@ export default function App() {
                 <section className="about-hero">
                   <ReflectiveCard blurStrength={16} overlayColor="rgba(0,0,0,0.42)" />
                   <div className="about-hero__inner">
-                    <p className="about-hero__eyebrow">Заявка из мини-приложения</p>
+                    <p className="about-hero__eyebrow">
+                      {isTelegram ? 'Заявка из мини-приложения' : 'Связь и заявки'}
+                    </p>
                     <p className="about-hero__text">
-                      Имя и телефон сохраняются на устройстве — не нужно вводить их заново при каждой консультации или заказе.
+                      {isTelegram
+                        ? 'Имя и телефон сохраняются на устройстве — не нужно вводить их заново при каждой консультации или заказе.'
+                        : 'Заявки и консультации ведём через Telegram-бота: нажмите кнопку ниже или откройте бота по ссылке в шапке.'}
                     </p>
                     {profile && (
                       <p className="about-hero__profile">
@@ -300,10 +322,10 @@ export default function App() {
 
                 <div className="about-cta">
                   <button type="button" className="cta-btn cta-btn--primary" onClick={openConsult}>
-                    Записаться на консультацию
+                    {isTelegram ? 'Записаться на консультацию' : 'Консультация в Telegram'}
                   </button>
                   <button type="button" className="cta-btn cta-btn--ghost" onClick={openOrder}>
-                    Оформить заказ
+                    {isTelegram ? 'Оформить заказ' : 'Заказ через бота'}
                   </button>
                 </div>
               </div>
@@ -417,7 +439,7 @@ export default function App() {
               )}
             </div>
 
-            <div className={`cta-row cta-row--tight${desktopMerged ? ' cta-row--desktop-merge-hide' : ''}`}>
+            <div className={`cta-row cta-row--tight${mergedLayout ? ' cta-row--desktop-merge-hide' : ''}`}>
               <button type="button" className="cta-btn secondary" onClick={goAbout}>
                 ← О компании
               </button>
@@ -425,9 +447,11 @@ export default function App() {
         </div>
       </div>
 
-      <Dock items={dockItems} panelHeight={56} baseItemSize={46} magnification={58} distance={180} />
+      {!isTelegram && <PublicFooter />}
 
-      {orderOpen && (
+      {isTelegram && <Dock items={dockItems} panelHeight={56} baseItemSize={46} magnification={58} distance={180} />}
+
+      {isTelegram && orderOpen && (
         <div className="modal-overlay" role="dialog" onClick={(e) => e.target === e.currentTarget && setOrderOpen(false)}>
           <div className="modal-sheet">
             <h3>Заявка</h3>
@@ -482,7 +506,7 @@ export default function App() {
         </div>
       )}
 
-      {consultOpen && (
+      {isTelegram && consultOpen && (
         <div className="modal-overlay" role="dialog" onClick={(e) => e.target === e.currentTarget && setConsultOpen(false)}>
           <div className="modal-sheet">
             <h3>Консультация</h3>
