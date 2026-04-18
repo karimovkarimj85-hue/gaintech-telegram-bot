@@ -375,6 +375,109 @@
   .cta-btn:active { opacity: 0.85; }
   .cta-btn svg { width: 14px; height: 14px; stroke: #000; fill: none; }
 
+  /* ── Order modal ── */
+  .order-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+    background: rgba(0,0,0,0.65);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .order-modal.open { display: flex; }
+  .order-sheet {
+    width: 100%;
+    max-height: min(88vh, 640px);
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
+    animation: sheetUp 0.28s ease-out;
+  }
+  @keyframes sheetUp {
+    from { transform: translateY(100%); opacity: 0.8; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .order-sheet h3 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--accent);
+  }
+  .order-sheet .hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    line-height: 1.4;
+  }
+  .order-field { margin-bottom: 14px; }
+  .order-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .order-field input,
+  .order-field textarea,
+  .order-field select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+  }
+  .order-field textarea { min-height: 88px; resize: vertical; }
+  .order-field input:focus,
+  .order-field textarea:focus,
+  .order-field select:focus {
+    outline: none;
+    border-color: var(--border-hover);
+  }
+  .order-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .order-actions button {
+    flex: 1;
+    padding: 14px 16px;
+    border-radius: 100px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .order-cancel {
+    background: transparent;
+    color: var(--muted);
+  }
+  .order-submit {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+  .order-err {
+    font-size: 12px;
+    color: #e88;
+    margin-top: 8px;
+    display: none;
+  }
+  .order-err.show { display: block; }
+
   /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 0; }
 </style>
@@ -408,10 +511,49 @@
 <div class="cta">
   <div class="cta-title">Хотите так же?</div>
   <div class="cta-sub">Обсудим вашу задачу и предложим решение</div>
-  <button class="cta-btn" onclick="openOrder()">
+  <button type="button" class="cta-btn" onclick="openOrder()">
     <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
     Оформить заказ
   </button>
+</div>
+
+<div id="orderModal" class="order-modal" aria-hidden="true">
+  <div class="order-sheet" role="dialog" aria-labelledby="orderTitle">
+    <h3 id="orderTitle">Заявка</h3>
+    <p class="hint">Заполните поля — заявка уйдёт в бот без очереди (не нужен ответ ИИ).</p>
+    <div class="order-field">
+      <label for="fName">Имя и фамилия *</label>
+      <input id="fName" name="name" autocomplete="name" placeholder="Иван Иванов">
+    </div>
+    <div class="order-field">
+      <label for="fPhone">Телефон *</label>
+      <input id="fPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+998901234567">
+    </div>
+    <div class="order-field">
+      <label for="fService">Тип задачи</label>
+      <select id="fService" name="service">
+        <option value="">Выберите или уточните в описании</option>
+        <option value="Сайт / лендинг">Сайт / лендинг</option>
+        <option value="Telegram-бот">Telegram-бот</option>
+        <option value="CRM / автоматизация">CRM / автоматизация</option>
+        <option value="AI / интеграция">AI / интеграция</option>
+        <option value="Другое">Другое</option>
+      </select>
+    </div>
+    <div class="order-field">
+      <label for="fDesc">Опишите задачу *</label>
+      <textarea id="fDesc" name="desc" placeholder="Кратко: что нужно, для какого бизнеса"></textarea>
+    </div>
+    <div class="order-field">
+      <label for="fBudget">Бюджет / сроки</label>
+      <input id="fBudget" name="budget" placeholder="Например: до $500, к концу месяца">
+    </div>
+    <div id="orderErr" class="order-err"></div>
+    <div class="order-actions">
+      <button type="button" class="order-cancel" onclick="closeOrderModal()">Отмена</button>
+      <button type="button" class="order-submit" onclick="submitOrderForm()">Отправить</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -550,12 +692,64 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 });
 
 function openOrder() {
+  document.getElementById('orderErr').classList.remove('show');
+  document.getElementById('orderModal').classList.add('open');
+  document.getElementById('orderModal').setAttribute('aria-hidden', 'false');
+}
+
+function closeOrderModal() {
+  document.getElementById('orderModal').classList.remove('open');
+  document.getElementById('orderModal').setAttribute('aria-hidden', 'true');
+}
+
+function showOrderErr(msg) {
+  const el = document.getElementById('orderErr');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function submitOrderForm() {
+  const name = (document.getElementById('fName').value || '').trim();
+  const phone = (document.getElementById('fPhone').value || '').trim();
+  const service = (document.getElementById('fService').value || '').trim();
+  const desc = (document.getElementById('fDesc').value || '').trim();
+  const budget = (document.getElementById('fBudget').value || '').trim();
+
+  if (!name || name.length < 2) {
+    showOrderErr('Укажите имя и фамилию.');
+    return;
+  }
+  const phoneDigits = phone.replace(/\s|-/g, '');
+  if (!phoneDigits || phoneDigits.length < 7) {
+    showOrderErr('Укажите корректный номер телефона.');
+    return;
+  }
+  if (!desc || desc.length < 5) {
+    showOrderErr('Кратко опишите задачу (хотя бы пара слов).');
+    return;
+  }
+
+  const payload = {
+    action: 'order',
+    name: name,
+    phone: phoneDigits,
+    service: service || '—',
+    desc: desc,
+    budget: budget || '—',
+  };
+
   if (window.Telegram?.WebApp) {
-    Telegram.WebApp.sendData(JSON.stringify({ action: 'order' }));
+    Telegram.WebApp.sendData(JSON.stringify(payload));
+    closeOrderModal();
   } else {
+    closeOrderModal();
     window.open('https://t.me/gaintech_bot', '_blank');
   }
 }
+
+document.getElementById('orderModal').addEventListener('click', function (e) {
+  if (e.target === this) closeOrderModal();
+});
 
 // Init Telegram WebApp
 if (window.Telegram?.WebApp) {

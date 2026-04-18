@@ -844,7 +844,7 @@ async def handle_webapp(message: Message):
 
         # Mini App может прислать только action без данных заявки.
         # Тогда запускаем соответствующую воронку, как будто пользователь нажал кнопку.
-        if data.get("action") == "order" and not data.get("name"):
+        if data.get("action") == "order" and not (data.get("name") or "").strip():
             memory.reset_order_flow(user_id)
             memory.set_flow_type(user_id, "order")
             await message.answer(
@@ -854,7 +854,7 @@ async def handle_webapp(message: Message):
             )
             return
 
-        if data.get("action") == "consult" and not data.get("name"):
+        if data.get("action") == "consult" and not (data.get("name") or "").strip():
             memory.reset_order_flow(user_id)
             memory.set_flow_type(user_id, "consultation")
             memory.set_stage(user_id, "consult_q1")
