@@ -1,33 +1,12 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Waves from './components/Waves';
 import TextType from './components/TextType';
 import MagicBento from './components/MagicBento';
 import ReflectiveCard from './components/ReflectiveCard';
 import Dock from './components/Dock';
-import PublicNav from './components/PublicNav';
-import PublicFooter from './components/PublicFooter';
 import { PROJECTS, BENTO_ITEMS, typeLabel } from './projects';
 import { loadProfile, saveProfile, clearProfile } from './profileStorage';
-import { useIsTelegramMiniApp } from './useTelegramEnv';
 import './App.css';
-
-const PUBLIC_BOT_URL = 'https://t.me/gaintech_bot';
-
-/** На ПК (широкий экран) — одна длинная страница; в мини-приложении узкий экран — как раньше, две «вкладки». */
-function useDesktopMerge() {
-  const query = '(min-width: 1024px)';
-  const [matches, setMatches] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia(query).matches : false,
-  );
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    const onChange = () => setMatches(mql.matches);
-    mql.addEventListener('change', onChange);
-    setMatches(mql.matches);
-    return () => mql.removeEventListener('change', onChange);
-  }, []);
-  return matches;
-}
 
 /** 2D-фон (canvas), общий для «О нас» и «Работы» */
 const WAVES_BG_PROPS = {
@@ -78,10 +57,6 @@ function sendTelegramData(payload) {
 }
 
 export default function App() {
-  const isTelegram = useIsTelegramMiniApp();
-  const desktopMerged = useDesktopMerge();
-  /** В браузере всегда одна длинная страница; в Telegram — как раньше на узком экране. */
-  const mergedLayout = !isTelegram || desktopMerged;
   const [page, setPage] = useState('about');
   const [orderOpen, setOrderOpen] = useState(false);
   const [consultOpen, setConsultOpen] = useState(false);
@@ -110,13 +85,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!isTelegram || !window.Telegram?.WebApp) return;
-    const tw = window.Telegram.WebApp;
-    tw.ready();
-    tw.expand();
-    tw.setHeaderColor('#080808');
-    tw.setBackgroundColor('#080808');
-  }, [isTelegram]);
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+      window.Telegram.WebApp.setHeaderColor('#080808');
+      window.Telegram.WebApp.setBackgroundColor('#080808');
+    }
+  }, []);
 
   useEffect(() => {
     const p = loadProfile();
@@ -126,31 +101,7 @@ export default function App() {
     }
   }, [orderOpen, consultOpen]);
 
-  const scrollToSection = useCallback((id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
-
-  /** Подсветка раздела при прокрутке (док в Telegram или шапка на сайте). */
-  useEffect(() => {
-    if (!mergedLayout) return;
-    const worksEl = document.getElementById('section-works');
-    if (!worksEl) return;
-    const onScroll = () => {
-      const top = worksEl.getBoundingClientRect().top;
-      const threshold = window.innerHeight * 0.38;
-      const next = top <= threshold ? 'projects' : 'about';
-      setPage((prev) => (prev === next ? prev : next));
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [mergedLayout]);
-
   function openOrder() {
-    if (!isTelegram) {
-      window.open(PUBLIC_BOT_URL, '_blank', 'noopener,noreferrer');
-      return;
-    }
     setErr('');
     const p = loadProfile();
     setFName(p?.name || '');
@@ -162,10 +113,6 @@ export default function App() {
   }
 
   function openConsult() {
-    if (!isTelegram) {
-      window.open(PUBLIC_BOT_URL, '_blank', 'noopener,noreferrer');
-      return;
-    }
     setErr('');
     const p = loadProfile();
     setFName(p?.name || '');
@@ -233,49 +180,33 @@ export default function App() {
     setConsultOpen(false);
   }
 
-  const goAbout = () => {
-    setPage('about');
-    if (mergedLayout) scrollToSection('section-about');
-  };
-  const goWorks = () => {
-    setPage('projects');
-    if (mergedLayout) scrollToSection('section-works');
-  };
-
   const dockItems = [
     {
       icon: <IconInfo />,
       label: 'О нас',
       className: page === 'about' ? 'dock-item--active' : '',
-      onClick: goAbout,
+      onClick: () => setPage('about'),
     },
     {
       icon: <IconGrid />,
       label: 'Работы',
       className: page === 'projects' ? 'dock-item--active' : '',
-      onClick: goWorks,
+      onClick: () => setPage('projects'),
     },
   ];
 
-  const hideAboutMobile = isTelegram && !desktopMerged && page !== 'about';
-  const hideProjectsMobile = isTelegram && !desktopMerged && page !== 'projects';
-
   return (
-    <div className={`app${!isTelegram ? ' app--public' : ''}`}>
+    <div className="app">
       {(page === 'about' || page === 'projects') && (
         <div className="app__waves app__waves--about" aria-hidden>
           <Waves {...WAVES_BG_PROPS} />
         </div>
       )}
 
-      {!isTelegram && <PublicNav activeSection={page} onAbout={goAbout} onWorks={goWorks} />}
-
-      <div className={`app__main${mergedLayout ? ' app__main--desktop-merge' : ''}`}>
-        <div
-          id="section-about"
-          className={`about-page${hideAboutMobile ? ' app-section--hide-mobile' : ''}`}
-        >
-            <header className="header header--about about-page__intro">
+      <div className="app__main">
+        {page === 'about' && (
+          <div className="about-page">
+            <header className="header header--about">
               <div className="brand">Gain Tech</div>
               <TextType
                 as="h1"
@@ -299,63 +230,52 @@ export default function App() {
               </p>
             </header>
 
-            <div className="about-page__layout">
-              <div className="about-page__primary">
-                <section className="about-hero">
-                  <ReflectiveCard blurStrength={16} overlayColor="rgba(0,0,0,0.42)" />
-                  <div className="about-hero__inner">
-                    <p className="about-hero__eyebrow">
-                      {isTelegram ? 'Заявка из мини-приложения' : 'Связь и заявки'}
-                    </p>
-                    <p className="about-hero__text">
-                      {isTelegram
-                        ? 'Имя и телефон сохраняются на устройстве — не нужно вводить их заново при каждой консультации или заказе.'
-                        : 'Заявки и консультации ведём через Telegram-бота: нажмите кнопку ниже или откройте бота по ссылке в шапке.'}
-                    </p>
-                    {profile && (
-                      <p className="about-hero__profile">
-                        Сохранено: <strong>{profile.name}</strong> · {profile.phone}
-                      </p>
-                    )}
-                  </div>
-                </section>
-
-                <div className="about-cta">
-                  <button type="button" className="cta-btn cta-btn--primary" onClick={openConsult}>
-                    {isTelegram ? 'Записаться на консультацию' : 'Консультация в Telegram'}
-                  </button>
-                  <button type="button" className="cta-btn cta-btn--ghost" onClick={openOrder}>
-                    {isTelegram ? 'Оформить заказ' : 'Заказ через бота'}
-                  </button>
-                </div>
+            <section className="about-hero">
+              <ReflectiveCard blurStrength={16} overlayColor="rgba(0,0,0,0.42)" />
+              <div className="about-hero__inner">
+                <p className="about-hero__eyebrow">Заявка из мини-приложения</p>
+                <p className="about-hero__text">
+                  Имя и телефон сохраняются на устройстве — не нужно вводить их заново при каждой консультации или заказе.
+                </p>
+                {profile && (
+                  <p className="about-hero__profile">
+                    Сохранено: <strong>{profile.name}</strong> · {profile.phone}
+                  </p>
+                )}
               </div>
+            </section>
 
-              <aside className="about-page__aside" aria-label="Услуги">
-                <p className="about-bento-label">Что делаем</p>
-                <div className="bento-wrap bento-wrap--compact">
-                  <MagicBento
-                    items={BENTO_ITEMS}
-                    textAutoHide
-                    enableStars
-                    enableSpotlight
-                    enableBorderGlow
-                    enableTilt={false}
-                    enableMagnetism={false}
-                    clickEffect
-                    spotlightRadius={320}
-                    particleCount={10}
-                    glowColor="132, 0, 255"
-                    disableAnimations={false}
-                  />
-                </div>
-              </aside>
+            <div className="about-cta">
+              <button type="button" className="cta-btn cta-btn--primary" onClick={openConsult}>
+                Записаться на консультацию
+              </button>
+              <button type="button" className="cta-btn cta-btn--ghost" onClick={openOrder}>
+                Оформить заказ
+              </button>
             </div>
-        </div>
 
-        <div
-          id="section-works"
-          className={`projects-page${hideProjectsMobile ? ' app-section--hide-mobile' : ''}`}
-        >
+            <p className="about-bento-label">Что делаем</p>
+            <div className="bento-wrap bento-wrap--compact">
+              <MagicBento
+                items={BENTO_ITEMS}
+                textAutoHide
+                enableStars
+                enableSpotlight
+                enableBorderGlow
+                enableTilt={false}
+                enableMagnetism={false}
+                clickEffect
+                spotlightRadius={320}
+                particleCount={10}
+                glowColor="132, 0, 255"
+                disableAnimations={false}
+              />
+            </div>
+          </div>
+        )}
+
+        {page === 'projects' && (
+          <div className="projects-page">
             <header className="header header--projects">
               <div className="brand">Gain Tech</div>
               <div className="header-title header-title--sm">
@@ -439,19 +359,18 @@ export default function App() {
               )}
             </div>
 
-            <div className={`cta-row cta-row--tight${mergedLayout ? ' cta-row--desktop-merge-hide' : ''}`}>
-              <button type="button" className="cta-btn secondary" onClick={goAbout}>
+            <div className="cta-row cta-row--tight">
+              <button type="button" className="cta-btn secondary" onClick={() => setPage('about')}>
                 ← О компании
               </button>
             </div>
-        </div>
+          </div>
+        )}
       </div>
 
-      {!isTelegram && <PublicFooter />}
+      <Dock items={dockItems} panelHeight={56} baseItemSize={46} magnification={58} distance={180} />
 
-      {isTelegram && <Dock items={dockItems} panelHeight={56} baseItemSize={46} magnification={58} distance={180} />}
-
-      {isTelegram && orderOpen && (
+      {orderOpen && (
         <div className="modal-overlay" role="dialog" onClick={(e) => e.target === e.currentTarget && setOrderOpen(false)}>
           <div className="modal-sheet">
             <h3>Заявка</h3>
@@ -506,7 +425,7 @@ export default function App() {
         </div>
       )}
 
-      {isTelegram && consultOpen && (
+      {consultOpen && (
         <div className="modal-overlay" role="dialog" onClick={(e) => e.target === e.currentTarget && setConsultOpen(false)}>
           <div className="modal-sheet">
             <h3>Консультация</h3>
