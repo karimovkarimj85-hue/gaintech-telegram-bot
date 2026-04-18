@@ -94,6 +94,12 @@
   margin-bottom: 12px;
 }
 
+.about-kicker.text-type {
+  display: block;
+  width: 100%;
+  min-height: 2.75em;
+}
+
 .about-lead {
   font-size: 15px;
   line-height: 1.55;

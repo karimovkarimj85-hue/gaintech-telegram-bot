@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import LineWaves from './components/LineWaves';
+import Waves from './components/Waves';
+import TextType from './components/TextType';
 import MagicBento from './components/MagicBento';
 import ReflectiveCard from './components/ReflectiveCard';
 import Dock from './components/Dock';
@@ -7,21 +8,19 @@ import { PROJECTS, BENTO_ITEMS, typeLabel } from './projects';
 import { loadProfile, saveProfile, clearProfile } from './profileStorage';
 import './App.css';
 
-/** Тот же фон LineWaves, что на «О нас» */
-const LINE_WAVES_PROPS = {
-  speed: 0.28,
-  innerLineCount: 28,
-  outerLineCount: 32,
-  warpIntensity: 1,
-  rotation: -45,
-  edgeFadeWidth: 0,
-  colorCycleSpeed: 0.9,
-  brightness: 0.22,
-  color1: '#ffffff',
-  color2: '#e0e7ff',
-  color3: '#a78bfa',
-  enableMouseInteraction: true,
-  mouseInfluence: 1.8,
+/** 2D-фон (canvas), общий для «О нас» и «Работы» */
+const WAVES_BG_PROPS = {
+  lineColor: 'rgba(255, 255, 255, 0.12)',
+  backgroundColor: 'transparent',
+  waveSpeedX: 0.0125,
+  waveSpeedY: 0.01,
+  waveAmpX: 40,
+  waveAmpY: 20,
+  friction: 0.9,
+  tension: 0.01,
+  maxCursorMove: 120,
+  xGap: 12,
+  yGap: 36,
 };
 
 function IconGrid() {
@@ -200,7 +199,7 @@ export default function App() {
     <div className="app">
       {(page === 'about' || page === 'projects') && (
         <div className="app__waves app__waves--about" aria-hidden>
-          <LineWaves {...LINE_WAVES_PROPS} />
+          <Waves {...WAVES_BG_PROPS} />
         </div>
       )}
 
@@ -209,7 +208,19 @@ export default function App() {
           <div className="about-page">
             <header className="header header--about">
               <div className="brand">Gain Tech</div>
-              <h1 className="about-kicker">Automate growth</h1>
+              <TextType
+                as="h1"
+                className="about-kicker"
+                text={['Automate growth', 'Боты, сайты, автоматизация', 'Заявки без рутины в Telegram']}
+                typingSpeed={48}
+                pauseDuration={2200}
+                deletingSpeed={36}
+                showCursor
+                cursorCharacter="|"
+                cursorBlinkDuration={0.55}
+                loop
+                initialDelay={500}
+              />
               <p className="about-lead">
                 Telegram-боты, сайты и автоматизация под ваш бизнес. Founder —{' '}
                 <a href="https://t.me/krm_kmb" target="_blank" rel="noreferrer">

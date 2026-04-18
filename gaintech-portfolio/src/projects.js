@@ -1,6 +1,16 @@
 /** Только реальные кейсы. Новые проекты — добавляйте сюда по мере готовности. */
 export const typeLabel = { site: 'Сайт', bot: 'Бот', other: 'AI / Другое' };
 
+/**
+ * Файлы из `public/` — без ведущего `/`, иначе на GitHub Pages картинка уйдёт в корень домена
+ * (`user.github.io/preview.jpg`) вместо папки проекта (`user.github.io/repo/preview.jpg`).
+ */
+function publicAsset(path) {
+  const name = String(path).replace(/^\//, '');
+  const base = import.meta.env.BASE_URL ?? './';
+  return base === './' || base === '.' ? `./${name}` : `${base.replace(/\/?$/, '/')}${name}`;
+}
+
 export const PROJECTS = [
   {
     id: 1,
@@ -12,8 +22,8 @@ export const PROJECTS = [
     tech: ['aiogram 3', 'Python', 'OpenRouter'],
     year: '2025',
     url: 'https://t.me/gaintech_bot',
-    preview: '/preview-gaintech.jpg',
-    previewFallback: '/preview-gaintech.svg',
+    preview: publicAsset('/preview-gaintech.jpg'),
+    previewFallback: publicAsset('/preview-gaintech.svg'),
   },
   {
     id: 2,
@@ -24,8 +34,8 @@ export const PROJECTS = [
     tech: ['aiogram', 'Python'],
     year: '2025',
     url: 'https://t.me/dishod_barber_bot',
-    preview: '/preview-barber.png',
-    previewFallback: '/preview-barber.svg',
+    preview: publicAsset('/preview-barber.png'),
+    previewFallback: publicAsset('/preview-barber.svg'),
   },
 ];
 

@@ -29,11 +29,13 @@ jobs:
           cache: npm
           cache-dependency-path: gaintech-portfolio/package-lock.json
 
+      # Явный base = /имя-репо/ — как в URL Pages (…github.io/gaintech-telegram-bot/).
+      # Так стабильно грузятся /assets/* и превью из public/, без зависимости от «/» в конце URL.
       - name: Install and build
         working-directory: gaintech-portfolio
         run: |
           npm ci
-          npm run build
+          npm run build -- --base=/${{ github.event.repository.name }}/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
