@@ -34,7 +34,7 @@ export const PROJECTS = [
     tech: ['aiogram', 'Python'],
     year: '2025',
     url: 'https://t.me/dishod_barber_bot',
-    preview: publicAsset('/photo-barber.png'),
+    preview: publicAsset('/photo-barber.jpg'),
     previewFallback: publicAsset('/preview-barber.svg'),
   },
 ];

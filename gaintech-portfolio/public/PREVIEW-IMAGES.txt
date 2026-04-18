@@ -1,7 +1,7 @@
 Превью карточек (папка public/), пути в src/projects.js:
 
 - photo-aurora.jpg — Aurora / Gain Tech (основное фото)
-- photo-barber.png — Dilshod's Barber (основное фото)
+- photo-barber.jpg — Dilshod's Barber (основное фото)
 
 Запасные SVG, если JPG/PNG не загрузятся:
 - preview-gaintech.svg

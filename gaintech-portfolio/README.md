@@ -20,7 +20,7 @@ npm run build
 
 ## Превью карточек
 
-В `public/` лежат превью: `photo-aurora.jpg`, `photo-barber.png` (при ошибке загрузки — SVG из `preview-*.svg`). См. `public/PREVIEW-IMAGES.txt`.
+В `public/` лежат превью: `photo-aurora.jpg`, `photo-barber.jpg` (при ошибке загрузки — SVG из `preview-*.svg`). См. `public/PREVIEW-IMAGES.txt`.
 
 По умолчанию открывается **«О нас»**; вкладка **«Работы»** — кейсы с фильтрами и тем же фоном LineWaves.
 
