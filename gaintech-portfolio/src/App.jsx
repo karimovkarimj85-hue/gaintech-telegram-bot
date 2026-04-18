@@ -206,7 +206,7 @@ export default function App() {
       <div className="app__main">
         {page === 'about' && (
           <div className="about-page">
-            <header className="header header--about">
+            <header className="header header--about about-page__intro">
               <div className="brand">Gain Tech</div>
               <TextType
                 as="h1"
@@ -230,46 +230,52 @@ export default function App() {
               </p>
             </header>
 
-            <section className="about-hero">
-              <ReflectiveCard blurStrength={16} overlayColor="rgba(0,0,0,0.42)" />
-              <div className="about-hero__inner">
-                <p className="about-hero__eyebrow">Заявка из мини-приложения</p>
-                <p className="about-hero__text">
-                  Имя и телефон сохраняются на устройстве — не нужно вводить их заново при каждой консультации или заказе.
-                </p>
-                {profile && (
-                  <p className="about-hero__profile">
-                    Сохранено: <strong>{profile.name}</strong> · {profile.phone}
-                  </p>
-                )}
+            <div className="about-page__layout">
+              <div className="about-page__primary">
+                <section className="about-hero">
+                  <ReflectiveCard blurStrength={16} overlayColor="rgba(0,0,0,0.42)" />
+                  <div className="about-hero__inner">
+                    <p className="about-hero__eyebrow">Заявка из мини-приложения</p>
+                    <p className="about-hero__text">
+                      Имя и телефон сохраняются на устройстве — не нужно вводить их заново при каждой консультации или заказе.
+                    </p>
+                    {profile && (
+                      <p className="about-hero__profile">
+                        Сохранено: <strong>{profile.name}</strong> · {profile.phone}
+                      </p>
+                    )}
+                  </div>
+                </section>
+
+                <div className="about-cta">
+                  <button type="button" className="cta-btn cta-btn--primary" onClick={openConsult}>
+                    Записаться на консультацию
+                  </button>
+                  <button type="button" className="cta-btn cta-btn--ghost" onClick={openOrder}>
+                    Оформить заказ
+                  </button>
+                </div>
               </div>
-            </section>
 
-            <div className="about-cta">
-              <button type="button" className="cta-btn cta-btn--primary" onClick={openConsult}>
-                Записаться на консультацию
-              </button>
-              <button type="button" className="cta-btn cta-btn--ghost" onClick={openOrder}>
-                Оформить заказ
-              </button>
-            </div>
-
-            <p className="about-bento-label">Что делаем</p>
-            <div className="bento-wrap bento-wrap--compact">
-              <MagicBento
-                items={BENTO_ITEMS}
-                textAutoHide
-                enableStars
-                enableSpotlight
-                enableBorderGlow
-                enableTilt={false}
-                enableMagnetism={false}
-                clickEffect
-                spotlightRadius={320}
-                particleCount={10}
-                glowColor="132, 0, 255"
-                disableAnimations={false}
-              />
+              <aside className="about-page__aside" aria-label="Услуги">
+                <p className="about-bento-label">Что делаем</p>
+                <div className="bento-wrap bento-wrap--compact">
+                  <MagicBento
+                    items={BENTO_ITEMS}
+                    textAutoHide
+                    enableStars
+                    enableSpotlight
+                    enableBorderGlow
+                    enableTilt={false}
+                    enableMagnetism={false}
+                    clickEffect
+                    spotlightRadius={320}
+                    particleCount={10}
+                    glowColor="132, 0, 255"
+                    disableAnimations={false}
+                  />
+                </div>
+              </aside>
             </div>
           </div>
         )}
