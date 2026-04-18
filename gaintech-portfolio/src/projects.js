@@ -1,4 +1,4 @@
-/** Реальные кейсы; сайты/CRM — заглушки «скоро». */
+/** Только реальные кейсы. Новые проекты — добавляйте сюда по мере готовности. */
 export const typeLabel = { site: 'Сайт', bot: 'Бот', other: 'AI / Другое' };
 
 export const PROJECTS = [
@@ -12,7 +12,9 @@ export const PROJECTS = [
     tech: ['aiogram 3', 'Python', 'OpenRouter'],
     year: '2025',
     url: 'https://t.me/gaintech_bot',
-    preview: '/preview-gaintech.svg',
+    /** Положите в `public/preview-gaintech.png` (ваша обложка). Если файла нет — покажется SVG. */
+    preview: '/preview-gaintech.png',
+    previewFallback: '/preview-gaintech.svg',
   },
   {
     id: 2,
@@ -23,35 +25,15 @@ export const PROJECTS = [
     tech: ['aiogram', 'Python'],
     year: '2025',
     url: 'https://t.me/dishod_barber_bot',
-    preview: '/preview-barber.svg',
-  },
-  {
-    id: 3,
-    type: 'site',
-    title: 'Корпоративные сайты',
-    desc: 'Лендинги и многостраничные сайты под бренд. Скоро — кейсы в портфолио.',
-    tech: ['Next.js', 'Tailwind'],
-    year: '2025',
-    url: '#',
-    preview: null,
-  },
-  {
-    id: 4,
-    type: 'other',
-    title: 'CRM и автоматизация',
-    desc: 'Учёт заявок, задачи, интеграции. Скоро — примеры внедрений.',
-    tech: ['FastAPI', 'PostgreSQL'],
-    year: '2025',
-    url: '#',
-    preview: null,
+    preview: '/preview-barber.png',
+    previewFallback: '/preview-barber.svg',
   },
 ];
 
+/** Компактный блок на странице «О нас» (4 плитки — меньше прокрутки). */
 export const BENTO_ITEMS = [
-  { color: '#120F17', title: 'Лиды', description: 'Заявки из чата и Web App', label: 'Воронка' },
-  { color: '#120F17', title: 'Автоматизация', description: 'Сценарии под ваш бизнес', label: 'Gain Tech' },
-  { color: '#120F17', title: 'Поддержка', description: 'Ответы 24/7 в Telegram', label: 'AI' },
-  { color: '#120F17', title: 'Интеграции', description: 'CRM, таблицы, уведомления', label: 'Связки' },
-  { color: '#120F17', title: 'Скорость', description: 'От прототипа до запуска', label: 'Delivery' },
-  { color: '#120F17', title: 'Прозрачность', description: 'Фиксированные этапы и сроки', label: 'Процесс' },
+  { color: '#120F17', title: 'Лиды и заявки', description: 'Чат, Web App, уведомления', label: 'Воронка' },
+  { color: '#120F17', title: 'Автоматизация', description: 'Боты и сценарии под задачу', label: 'Gain Tech' },
+  { color: '#120F17', title: 'Сроки', description: 'Понятные этапы и дедлайны', label: 'Процесс' },
+  { color: '#120F17', title: 'Связь', description: 'Ответ до 2 ч в рабочее время', label: 'Поддержка' },
 ];

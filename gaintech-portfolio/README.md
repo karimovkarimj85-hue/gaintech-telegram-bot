@@ -18,9 +18,16 @@ npm run dev
 npm run build
 ```
 
-## Превью проектов
+## Превью карточек (ваши фото)
 
-Файлы в `public/preview-gaintech.svg` и `preview-barber.svg` — заглушки. Можно заменить на свои **PNG/WebP** с теми же именами (или поправить пути в `src/projects.js`).
+Ожидаемые файлы (положите в `public/`):
+
+- `preview-gaintech.png` — обложка Aurora / Gain Tech  
+- `preview-barber.png` — обложка Dilshod's Barber  
+
+Пока PNG нет в репозитории, показываются SVG из `public/preview-*.svg`. Подробности: `public/PREVIEW-IMAGES.txt`.
+
+По умолчанию открывается вкладка **«О нас»**; **«Работы»** — два реальных бота, без плейсхолдеров «скоро».
 
 ## GitHub Actions
 

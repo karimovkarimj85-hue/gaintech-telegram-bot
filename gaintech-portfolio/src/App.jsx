@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import LineWaves from './components/LineWaves';
 import MagicBento from './components/MagicBento';
 import ReflectiveCard from './components/ReflectiveCard';
@@ -26,6 +26,14 @@ function IconInfo() {
   );
 }
 
+function PreviewImg({ src, fallback }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return <img src={fallback} alt="" />;
+  }
+  return <img src={src} alt="" onError={() => setFailed(true)} />;
+}
+
 function sendTelegramData(payload) {
   if (window.Telegram?.WebApp) {
     window.Telegram.WebApp.sendData(JSON.stringify(payload));
@@ -33,8 +41,7 @@ function sendTelegramData(payload) {
 }
 
 export default function App() {
-  const [page, setPage] = useState('projects');
-  const [filter, setFilter] = useState('all');
+  const [page, setPage] = useState('about');
   const [orderOpen, setOrderOpen] = useState(false);
   const [consultOpen, setConsultOpen] = useState(false);
   const [profile, setProfile] = useState(() => loadProfile());
@@ -63,19 +70,6 @@ export default function App() {
       setFPhone(p.phone || '');
     }
   }, [orderOpen, consultOpen]);
-
-  const filtered = useMemo(() => {
-    if (filter === 'all') return PROJECTS;
-    return PROJECTS.filter((i) => i.type === filter);
-  }, [filter]);
-
-  const counts = useMemo(() => {
-    const all = PROJECTS.length;
-    const site = PROJECTS.filter((i) => i.type === 'site').length;
-    const bot = PROJECTS.filter((i) => i.type === 'bot').length;
-    const other = PROJECTS.filter((i) => i.type === 'other').length;
-    return { all, site, bot, other };
-  }, []);
 
   function openOrder() {
     setErr('');
@@ -116,15 +110,14 @@ export default function App() {
     }
     saveProfile({ name, phone });
     setProfile(loadProfile());
-    const payload = {
+    sendTelegramData({
       action: 'order',
       name,
       phone,
       service: fService.trim() || '—',
       desc,
       budget: fBudget.trim() || '—',
-    };
-    sendTelegramData(payload);
+    });
     setOrderOpen(false);
   }
 
@@ -159,104 +152,119 @@ export default function App() {
 
   const dockItems = [
     {
-      icon: <IconGrid />,
-      label: 'Проекты',
-      onClick: () => setPage('projects'),
-    },
-    {
       icon: <IconInfo />,
       label: 'О нас',
+      className: page === 'about' ? 'dock-item--active' : '',
       onClick: () => setPage('about'),
+    },
+    {
+      icon: <IconGrid />,
+      label: 'Работы',
+      className: page === 'projects' ? 'dock-item--active' : '',
+      onClick: () => setPage('projects'),
     },
   ];
 
   return (
     <div className="app">
-      {page === 'projects' && (
-        <div className="app__waves" aria-hidden>
+      {page === 'about' && (
+        <div className="app__waves app__waves--about" aria-hidden>
           <LineWaves
-            speed={0.3}
-            innerLineCount={32}
-            outerLineCount={36}
+            speed={0.28}
+            innerLineCount={28}
+            outerLineCount={32}
             warpIntensity={1}
             rotation={-45}
             edgeFadeWidth={0}
-            colorCycleSpeed={1}
-            brightness={0.18}
+            colorCycleSpeed={0.9}
+            brightness={0.22}
             color1="#ffffff"
-            color2="#ffffff"
+            color2="#e0e7ff"
             color3="#a78bfa"
             enableMouseInteraction
-            mouseInfluence={1.5}
+            mouseInfluence={1.8}
           />
         </div>
       )}
 
       <div className="app__main">
-        {page === 'projects' && (
-          <>
-            <header className="header">
+        {page === 'about' && (
+          <div className="about-page">
+            <header className="header header--about">
               <div className="brand">Gain Tech</div>
-              <div className="header-title">
-                Our
-                <br />
-                <span>Work.</span>
-              </div>
-              <p className="header-sub">
-                Сайты, боты и AI — кейсы команды. Заявки и консультация сохраняют ваши контакты в этом приложении.
+              <h1 className="about-kicker">Automate growth</h1>
+              <p className="about-lead">
+                Telegram-боты, сайты и автоматизация под ваш бизнес. Founder —{' '}
+                <a href="https://t.me/krm_kmb" target="_blank" rel="noreferrer">
+                  @krm_kmb
+                </a>
+                . Ответим в течение 2 часов в рабочее время.
               </p>
             </header>
 
-            <div className="filters-wrap">
-              <div className="filters">
-                {[
-                  ['all', 'Все работы'],
-                  ['site', 'Сайты'],
-                  ['bot', 'Боты'],
-                  ['other', 'Другое'],
-                ].map(([k, label]) => (
-                  <button
-                    key={k}
-                    type="button"
-                    className={`filter-btn ${filter === k ? 'active' : ''}`}
-                    onClick={() => setFilter(k)}
-                  >
-                    {label}
-                  </button>
-                ))}
+            <section className="about-hero">
+              <ReflectiveCard blurStrength={16} overlayColor="rgba(0,0,0,0.42)" />
+              <div className="about-hero__inner">
+                <p className="about-hero__eyebrow">Заявка из мини-приложения</p>
+                <p className="about-hero__text">
+                  Имя и телефон сохраняются на устройстве — не нужно вводить их заново при каждой консультации или заказе.
+                </p>
+                {profile && (
+                  <p className="about-hero__profile">
+                    Сохранено: <strong>{profile.name}</strong> · {profile.phone}
+                  </p>
+                )}
               </div>
+            </section>
+
+            <div className="about-cta">
+              <button type="button" className="cta-btn cta-btn--primary" onClick={openConsult}>
+                Записаться на консультацию
+              </button>
+              <button type="button" className="cta-btn cta-btn--ghost" onClick={openOrder}>
+                Оформить заказ
+              </button>
             </div>
 
-            <div className="stats">
-              <div className="stat">
-                <div className="stat-num">{counts.all}</div>
-                <div className="stat-label">Проектов</div>
-              </div>
-              <div className="stat">
-                <div className="stat-num">{counts.site}</div>
-                <div className="stat-label">Сайтов</div>
-              </div>
-              <div className="stat">
-                <div className="stat-num">{counts.bot}</div>
-                <div className="stat-label">Ботов</div>
-              </div>
-              <div className="stat">
-                <div className="stat-num">{counts.other}</div>
-                <div className="stat-label">AI</div>
-              </div>
+            <p className="about-bento-label">Что делаем</p>
+            <div className="bento-wrap bento-wrap--compact">
+              <MagicBento
+                items={BENTO_ITEMS}
+                textAutoHide
+                enableStars
+                enableSpotlight
+                enableBorderGlow
+                enableTilt={false}
+                enableMagnetism={false}
+                clickEffect
+                spotlightRadius={320}
+                particleCount={10}
+                glowColor="132, 0, 255"
+                disableAnimations={false}
+              />
             </div>
+          </div>
+        )}
+
+        {page === 'projects' && (
+          <div className="projects-page">
+            <header className="header header--projects">
+              <div className="brand">Gain Tech</div>
+              <div className="header-title header-title--sm">
+                Кейсы
+                <br />
+                <span>в Telegram</span>
+              </div>
+              <p className="header-sub">Два живых бота — новые работы добавим сюда по мере запуска.</p>
+            </header>
+
+            <div className="projects-hint">Превью: положите свои PNG в репозиторий (см. public/PREVIEW-IMAGES.txt)</div>
 
             <div className="grid">
-              {filtered.map((item, index) => (
+              {PROJECTS.map((item, index) => (
                 <article key={item.id} className={'card' + (item.featured ? ' featured' : '')} style={{ animationDelay: `${index * 40}ms` }}>
                   <div className="card-preview">
-                    {item.preview ? (
-                      <img src={item.preview} alt="" />
-                    ) : (
-                      <div className="card-preview-placeholder">
-                        <span>Скоро превью</span>
-                      </div>
-                    )}
+                    <PreviewImg src={item.preview} fallback={item.previewFallback} />
                   </div>
                   <div className="card-body">
                     <div className="card-meta">
@@ -274,7 +282,7 @@ export default function App() {
                     </div>
                     {item.url && item.url !== '#' ? (
                       <a className="card-link" href={item.url} target="_blank" rel="noreferrer">
-                        Открыть в Telegram
+                        Открыть бота
                       </a>
                     ) : null}
                   </div>
@@ -282,70 +290,12 @@ export default function App() {
               ))}
             </div>
 
-            <div className="cta-row">
-              <button type="button" className="cta-btn" onClick={openOrder}>
-                Оформить заказ
-              </button>
-              <button type="button" className="cta-btn secondary" onClick={openConsult}>
-                Записаться на консультацию
+            <div className="cta-row cta-row--tight">
+              <button type="button" className="cta-btn secondary" onClick={() => setPage('about')}>
+                ← О компании
               </button>
             </div>
-          </>
-        )}
-
-        {page === 'about' && (
-          <>
-            <header className="header">
-              <div className="brand">Gain Tech</div>
-              <div className="header-title">
-                О
-                <br />
-                <span>команде</span>
-              </div>
-            </header>
-
-            <div className="about-hero">
-              <ReflectiveCard blurStrength={14} overlayColor="rgba(0,0,0,0.35)" />
-              <div className="about-hero__inner">
-                <h2>Automate growth</h2>
-                <p>
-                  Мы делаем Telegram-ботов, сайты и CRM под задачи бизнеса. Founder — Каримов Каримбек (@krm_kmb). Ответим в
-                  течение 2 часов в рабочее время.
-                </p>
-                {profile && (
-                  <p style={{ marginTop: 12, fontSize: 13, color: '#888' }}>
-                    Контакты в приложении сохранены: {profile.name} · {profile.phone}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="bento-wrap">
-              <MagicBento
-                items={BENTO_ITEMS}
-                textAutoHide
-                enableStars
-                enableSpotlight
-                enableBorderGlow
-                enableTilt={false}
-                enableMagnetism={false}
-                clickEffect
-                spotlightRadius={400}
-                particleCount={12}
-                glowColor="132, 0, 255"
-                disableAnimations={false}
-              />
-            </div>
-
-            <div className="cta-row">
-              <button type="button" className="cta-btn" onClick={openOrder}>
-                Оформить заказ
-              </button>
-              <button type="button" className="cta-btn secondary" onClick={openConsult}>
-                Консультация
-              </button>
-            </div>
-          </>
+          </div>
         )}
       </div>
 

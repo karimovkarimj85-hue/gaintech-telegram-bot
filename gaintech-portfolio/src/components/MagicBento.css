@@ -23,6 +23,33 @@
   }
 }
 
+/* Компактная сетка на странице «О нас» — 2×2, меньше высота карточек */
+.bento-wrap--compact .card-grid {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-width: 520px;
+  padding-bottom: 24px;
+}
+
+.bento-wrap--compact .magic-bento-card {
+  min-height: 96px;
+  padding: 12px 14px;
+}
+
+.bento-wrap--compact .magic-bento-card__title {
+  font-size: 0.95rem;
+}
+
+.bento-wrap--compact .magic-bento-card__description {
+  font-size: 12px;
+}
+
+@media (max-width: 380px) {
+  .bento-wrap--compact .card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .magic-bento-card {
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.08);

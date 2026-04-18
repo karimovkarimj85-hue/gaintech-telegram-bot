@@ -51,6 +51,12 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+.dock-item.dock-item--active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
 .dock-icon {
   display: flex;
   align-items: center;

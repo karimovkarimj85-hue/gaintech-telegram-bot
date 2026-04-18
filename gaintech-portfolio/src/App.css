@@ -14,6 +14,13 @@
   opacity: 0.85;
 }
 
+.app__waves--about {
+  height: 38vh;
+  min-height: 220px;
+  max-height: 320px;
+  opacity: 0.65;
+}
+
 .app__main {
   position: relative;
   z-index: 1;
@@ -62,6 +69,136 @@
   font-weight: 300;
   color: #888;
   line-height: 1.5;
+}
+
+/* ── Страница «О нас» (главная по смыслу) ── */
+.about-page {
+  padding-bottom: 8px;
+}
+
+.header--about {
+  padding: 28px 20px 16px;
+}
+
+.header--about::after {
+  opacity: 0.5;
+}
+
+.about-kicker {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(26px, 7vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.about-lead {
+  font-size: 15px;
+  line-height: 1.55;
+  color: #b8b8b8;
+  max-width: 36rem;
+  font-weight: 400;
+}
+
+.about-lead a {
+  color: #e0e0e0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.about-hero {
+  position: relative;
+  margin: 0 20px 16px;
+  min-height: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.about-hero__inner {
+  position: relative;
+  z-index: 1;
+  padding: 20px 20px 22px;
+}
+
+.about-hero__eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 8px;
+}
+
+.about-hero__text {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #d0d0d0;
+}
+
+.about-hero__profile {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #888;
+}
+
+.about-hero__profile strong {
+  color: #ccc;
+  font-weight: 600;
+}
+
+.about-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 20px 20px;
+  max-width: 420px;
+}
+
+.cta-btn--primary {
+  background: linear-gradient(135deg, #fafafa 0%, #e0e0e0 100%);
+  color: #080808;
+  font-weight: 600;
+  padding: 14px 22px;
+}
+
+.cta-btn--ghost {
+  background: transparent;
+  color: #ddd;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.about-bento-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #666;
+  margin: 0 20px 10px;
+}
+
+/* Проекты — проще визуально */
+.header--projects {
+  padding-top: 32px;
+}
+
+.header-title--sm {
+  font-size: clamp(24px, 6vw, 32px);
+}
+
+.projects-hint {
+  font-size: 11px;
+  color: #555;
+  line-height: 1.4;
+  margin: -4px 20px 16px;
+  max-width: 36rem;
+}
+
+.cta-row--tight {
+  margin-top: 16px;
+  margin-bottom: 8px;
 }
 
 .filters-wrap {
@@ -266,33 +403,8 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.about-hero {
-  position: relative;
-  margin: 0 20px 24px;
-  min-height: 220px;
-  border-radius: 24px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.about-hero__inner {
-  position: relative;
-  z-index: 1;
-  padding: 28px 24px;
-}
-.about-hero h2 {
-  font-family: 'Syne', sans-serif;
-  font-size: 22px;
-  margin-bottom: 12px;
-}
-.about-hero p {
-  font-size: 14px;
-  color: #aaa;
-  line-height: 1.55;
-  max-width: 560px;
-}
-
 .bento-wrap {
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 .modal-overlay {
