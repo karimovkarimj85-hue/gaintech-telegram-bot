@@ -17,17 +17,12 @@ from aiogram.types import (
     WebAppInfo,
 )
 
-from config import BOT_TOKEN, NOTIFY_CHANNEL_ID, MAX_HISTORY
+from config import BOT_TOKEN, NOTIFY_CHANNEL_ID, MAX_HISTORY, PORTFOLIO_WEBAPP_URL
 from memory import MemoryManager
 from llm import ask_llm, polish_ru
 from knowledge_base import KB_TEXT
 from notifications import send_order_notification, send_consultation_notification
 from admin import register_admin_handlers
-
-# Mini App портфолио (GitHub Pages после push в gaintech-portfolio)
-PORTFOLIO_WEBAPP_URL = (
-    "https://karimovkarimj85-hue.github.io/gaintech-portfolio/index.html"
-)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -48,7 +43,7 @@ MAIN_MENU = ReplyKeyboardMarkup(
         [
             KeyboardButton(
                 text="О нас & Портфолио",
-                web_app=WebAppInfo(url="https://karimovkarimj85-hue.github.io/gaintech-portfolio/index.html"),
+                web_app=WebAppInfo(url=PORTFOLIO_WEBAPP_URL),
             )
         ],
         [KeyboardButton(text="Оформить заказ"), KeyboardButton(text="✉ Связаться")],
