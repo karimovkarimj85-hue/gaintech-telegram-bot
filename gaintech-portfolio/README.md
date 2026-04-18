@@ -1,16 +1,16 @@
 ﻿# Mini App (портфолио)
 
-Статика для Telegram Web App. Живёт **в том же репозитории**, что и бот (`gaintech-telegram-bot`).
+Статика для Telegram Web App. В том же репозитории, что и бот.
 
-## GitHub Pages (один репозиторий)
+## GitHub Pages (обязательно, иначе будет 404)
 
-1. Репозиторий: **gaintech-telegram-bot**
-2. **Settings → Pages → Build and deployment**
-3. **Source:** Deploy from a branch  
-4. **Branch:** `main`, папка **`/` (root)** — не отдельный репозиторий `gaintech-portfolio`.
+1. Откройте репозиторий **gaintech-telegram-bot** на GitHub.
+2. **Settings → Pages**
+3. В блоке **Build and deployment** выберите **Source: GitHub Actions** (не «Deploy from a branch», если раньше не работало).
+4. Сделайте push в `main` или запустите workflow **Deploy portfolio to GitHub Pages** вручную (**Actions → … → Run workflow**).
 
-После публикации мини-приложение доступно по адресу:
+После успешного деплоя мини-приложение:
 
-`https://karimovkarimj85-hue.github.io/gaintech-telegram-bot/gaintech-portfolio/index.html`
+`https://karimovkarimj85-hue.github.io/gaintech-telegram-bot/index.html`
 
-В `@BotFather` для кнопки Web App укажите этот же URL (или задайте `PORTFOLIO_WEBAPP_URL` в окружении бота).
+Переменная окружения бота `PORTFOLIO_WEBAPP_URL` должна совпадать с этим URL (уже задана по умолчанию в `config.py`).

@@ -81,11 +81,11 @@ MAX_TOKENS = 512        # макс. токенов ответа
 TEMPERATURE = 0.7
 
 # ── Mini App (GitHub Pages, один репозиторий с ботом) ───────────────────
-# По умолчанию: project Pages репозитория gaintech-telegram-bot, папка gaintech-portfolio/
+# Деплой: .github/workflows/pages.yml публикует gaintech-portfolio/ как корень сайта.
 # Переопределите в .env / Railway, если другой хост или форк.
 PORTFOLIO_WEBAPP_URL = _env(
     "PORTFOLIO_WEBAPP_URL",
-    "https://karimovkarimj85-hue.github.io/gaintech-telegram-bot/gaintech-portfolio/index.html",
+    "https://karimovkarimj85-hue.github.io/gaintech-telegram-bot/index.html",
 )
 
 # ── Уведомления ──────────────────────────────
